@@ -12,9 +12,9 @@ namespace Functional
 for(int max = 1; max <= 8; ++max)
 {
     var typeCount = Enumerable.Range(1, max);
-	var typeList = string.Join(",", typeCount.Select(x => $"T{x}"));
-	var functions = string.Join(",", typeCount.Select(x => $"Func<T{x}, TResult> f{x}"));
-	var actions = string.Join(",", typeCount.Select(x => $"Action<T{x}> f{x}"));
+    var typeList = string.Join(",", typeCount.Select(x => $"T{x}"));
+    var functions = string.Join(",", typeCount.Select(x => $"Func<T{x}, TResult> f{x}"));
+    var actions = string.Join(",", typeCount.Select(x => $"Action<T{x}> f{x}"));
 #>
     public class Alternative<<#= typeList #>>
     {
@@ -78,6 +78,42 @@ for(int max = 1; max <= 8; ++max)
                     throw null;
             }
         }
+
+        public override string ToString()
+        {
+            return $"({data.GetType().ToString()} {data.ToString()})";
+        }
+
+        public bool Equals(Alternative<<#= typeList #>> other)
+        {
+            if(ReferenceEquals(null, other)) return false;
+            if(ReferenceEquals(this, other)) return true;
+            return Equals(data, other.data);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if(ReferenceEquals(null, obj)) return false;
+            if(ReferenceEquals(this, obj)) return true;
+            if(obj.GetType() != this.GetType()) return false;
+            return Equals((Alternative<<#= typeList #>>) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (data != null ? data.GetHashCode() : 0);
+        }
+
+        public static bool operator ==(Alternative<<#= typeList #>> left, Alternative<<#= typeList #>> right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(Alternative<<#= typeList #>> left, Alternative<<#= typeList #>> right)
+        {
+            return !Equals(left, right);
+        }
+
     }
 <#
 }
