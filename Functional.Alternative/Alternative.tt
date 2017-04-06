@@ -1,0 +1,85 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".generated.cs" #>
+using System;
+
+namespace Functional
+{
+<#
+for(int max = 1; max <= 8; ++max)
+{
+    var typeCount = Enumerable.Range(1, max);
+	var typeList = string.Join(",", typeCount.Select(x => $"T{x}"));
+	var functions = string.Join(",", typeCount.Select(x => $"Func<T{x}, TResult> f{x}"));
+	var actions = string.Join(",", typeCount.Select(x => $"Action<T{x}> f{x}"));
+#>
+    public class Alternative<<#= typeList #>>
+    {
+        private readonly object data;
+        private readonly int index;
+
+<#
+    foreach (var x in typeCount)
+    {
+#>
+        public <#= $"T{x} Item{x}" #> => (<#= $"T{x}" #>)data;
+
+        public static explicit operator <#= $"T{x}" #>(Alternative<<#= typeList #>> alternative)
+        {
+            return alternative.<#= $"Item{x}" #>;
+        }
+
+        public Alternative(<#= $"T{x}" #> item)
+        {
+            data = item;
+            index = <#= x-1 #>;
+        }
+
+<#
+    }
+#>
+
+        public TResult Select<TResult>(<#= functions #>)
+        {
+            switch(index)
+            {
+<#
+    foreach (var x in typeCount)
+    {
+#>
+                case <#= x-1 #>:
+                    return <#= $"f{x}(Item{x})" #>;
+<#
+    }
+#>
+                default:
+                    throw null;
+            }
+        }
+
+        public void Apply(<#= actions #>)
+        {
+            switch(index)
+            {
+<#
+    foreach (var x in typeCount)
+    {
+#>
+                case <#= x-1 #>:
+                    <#= $"f{x}(Item{x})" #>;
+                    break;
+<#
+    }
+#>
+                default:
+                    throw null;
+            }
+        }
+    }
+<#
+}
+#>
+}
